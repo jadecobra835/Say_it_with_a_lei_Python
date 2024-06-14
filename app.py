@@ -54,8 +54,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql://ijvfg0wx4cjc30z1:zl87h5usl76bem
 # mydb = my_db()
 mydb = SQLAlchemy(app)
 
-mycursor = mydb
-
 @app.route("/auth", methods=["POST"])
 def authCheck():
     developer = {
@@ -97,7 +95,7 @@ def add_lei():
     
     leiItem = ( name, price, image, description, color1, color2, color3, color4, type)
     
-    mycursor.execute(sql, leiItem)
+    mydb.execute(sql, leiItem)
     mydb.commit()
 
     return jsonify("record inserted")
@@ -107,8 +105,8 @@ def add_lei():
 @app.route('/get-preset-leis/<type>')
 def get_leis(type):
     graduation = ("SELECT * FROM preset_leis WHERE type ='%s'" % type)
-    mycursor.execute(graduation)
-    myresult = mycursor.fetchall()
+    mydb.execute(graduation)
+    myresult = mydb.fetchall()
 
     def decodeBytes(data):
         return [{   
@@ -135,8 +133,8 @@ def get_leis(type):
 @app.route('/get-one-lei/<product_id>')
 def get_lei(product_id):
     comboString = "SELECT * FROM preset_leis WHERE id =" + product_id
-    mycursor.execute(comboString)
-    myresult = mycursor.fetchall()
+    mydb.execute(comboString)
+    myresult = mydb.fetchall()
 
     def decodeBytes(data):
         return [{   
@@ -164,7 +162,7 @@ def deleteLei(product_id):
     command = "DELETE FROM preset_leis WHERE id=" + product_id
     
     try: 
-        mycursor.execute(command)
+        mydb.execute(command)
         mydb.commit()
         return 'Successfully deleted Lei'
 
