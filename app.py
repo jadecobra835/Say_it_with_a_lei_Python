@@ -1,6 +1,6 @@
 import os
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import mysql.connector
 from mysql.connector import Error
 import json
@@ -8,9 +8,8 @@ from datetime import date
 
 app = Flask(__name__)
 cors = CORS(app, supports_credentials=True, resources={
-    r"/api/*": {"origins", "https://localhost:3000"}
+    r"/*": {"origins", ["https://localhost:3000", "https://xjj-say-it-with-a-lei-34e7166cb08e.herokuapp.com"]}
 })
-app.config['CORS_HEADERS'] = 'Contet-Type'
 
 jawsdb_url = os.getenv("JAWSDB_URL")
 db_name = os.getenv('DB_NAME')
