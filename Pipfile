@@ -14,6 +14,7 @@ flask-migrate = "*"
 flask-sqlalchemy = "*"
 flask-testing = "*"
 python-decouple = "*"
+mysqlclient = "*"
 
 [dev-packages]
 
