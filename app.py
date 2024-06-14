@@ -1,13 +1,13 @@
-import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from flask_sqlalchemy import SQLAlchemy
 import mysql.connector
 from mysql.connector import Error
 import json
 from datetime import date
 
 app = Flask(__name__)
-cors = CORS(app, resources={
+cors = CORS(app, supports_credentials=True, resources={
     r"/*": {
         "origins": [
             "http://localhost:3000", 
@@ -18,43 +18,43 @@ cors = CORS(app, resources={
     }
 })
 
-jawsdb_url = os.getenv("JAWSDB_URL")
-db_name = os.getenv('DB_NAME')
-db_user = os.getenv('DB_USER')
-db_pw = os.getenv('PB_PW')
+app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql://ijvfg0wx4cjc30z1:zl87h5usl76bemkt@enqhzd10cxh7hv2e.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/rw3nklf1029jieu'
 
-def my_db():
-    connection = None
-    try: 
-        if jawsdb_url:
-            import urllib.parse as urlparse
-            url = urlparse.urlparse(jawsdb_url)
-            connection = mysql.connector.connect(
-                user=url.username,
-                password=url.password,
-                host=url.hostname,
-                port=url.port,
-                database=url.path[1:]
-            )
-        else:
-            connection = mysql.connector.connect(
-                user="root",
-                password="BlueStitch2006!",
-                host="localhost",
-                port=3306,
-                database = "lei_catalog"
-            )
-        print("Connection to MySQL DB successful")
-    except Error as e:
-        print(f"The error '{e}' occured")
+# jawsdb_url = SQLAlchemy(app)
 
-    return connection
+# def my_db():
+#     connection = None
+#     try: 
+#         if jawsdb_url:
+#             import urllib.parse as urlparse
+#             url = urlparse.urlparse(jawsdb_url)
+#             connection = mysql.connector.connect(
+#                 user=url.username,
+#                 password=url.password,
+#                 host=url.hostname,
+#                 port=url.port,
+#                 database=url.path[1:]
+#             )
+#         else:
+#             connection = mysql.connector.connect(
+#                 user="root",
+#                 password="BlueStitch2006!",
+#                 host="localhost",
+#                 port=3306,
+#                 database = "lei_catalog"
+#             )
+#         print("Connection to MySQL DB successful")
+#     except Error as e:
+#         print(f"The error '{e}' occured")
 
+#     return connection
 
 
-mydb = my_db()
 
-mycursor = mydb.cursor()
+# mydb = my_db()
+mydb = SQLAlchemy(app)
+
+mycursor = mydb
 
 @app.route("/auth", methods=["POST"])
 def authCheck():
