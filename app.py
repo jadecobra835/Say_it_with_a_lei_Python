@@ -7,7 +7,7 @@ import json
 from datetime import date
 
 app = Flask(__name__)
-cors = CORS(app, supports_credentials=True, resources={
+cors = CORS(app, resources={
     r"/*": {
         "origins": [
             "http://localhost:3000", 
@@ -15,7 +15,6 @@ cors = CORS(app, supports_credentials=True, resources={
         ],
         "methods": ["POST", "GET", "DELETE"],
         "allow_headers": ["Content-Type", "Authorization"]
-
     }
 })
 
