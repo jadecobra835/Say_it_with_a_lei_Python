@@ -8,7 +8,7 @@ from datetime import date
 
 app = Flask(__name__)
 cors = CORS(app, supports_credentials=True, resources={
-    r"/*": {"origins", ["https://localhost:3000", "https://xjj-say-it-with-a-lei-34e7166cb08e.herokuapp.com"]}
+    r"/*": {"origins", ["http://localhost:3000", "https://xjj-say-it-with-a-lei-34e7166cb08e.herokuapp.com"]}
 })
 
 jawsdb_url = os.getenv("JAWSDB_URL")
