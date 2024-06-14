@@ -1,18 +1,49 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import mysql.connector
+from mysql.connector import Error
 import json
 from datetime import date
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-mydb = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="BlueStitch2006!",
-    database = "lei_catalog"
-)
+jawsdb_url = os.getenv("JAWSDB_URL")
+db_name = os.getenv('DB_NAME')
+db_user = os.getenv('DB_USER')
+db_pw = os.getenv('PB_PW')
+
+def my_db():
+    connection = None
+    try: 
+        if jawsdb_url:
+            import urllib.parse as urlparse
+            url = urlparse.urlparse(jawsdb_url)
+            connection = mysql.connector.connect(
+                user=url.username,
+                password=url.password,
+                host=url.hostname,
+                port=url.port,
+                database=url.path[1:]
+            )
+        else:
+            connection = mysql.connector.connect(
+                user="root",
+                password="BlueStitch2006!",
+                host="localhost",
+                port=3306,
+                database = "lei_catalog"
+            )
+        print("Connection to MySQL DB successful")
+    except Error as e:
+        print(f"The error '{e}' occured")
+
+    return connection
+
+
+
+mydb = my_db()
 
 mycursor = mydb.cursor()
 
