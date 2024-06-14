@@ -15,6 +15,7 @@ flask-sqlalchemy = "*"
 flask-testing = "*"
 python-decouple = "*"
 mysqlclient = "*"
+gunicorn = "*"
 
 [dev-packages]
 
