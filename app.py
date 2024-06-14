@@ -7,7 +7,10 @@ import json
 from datetime import date
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+cors = CORS(app, supports_credentials=True, resources={
+    r"/api/*": {"origins", "https://localhost:3000"}
+})
+app.config['CORS_HEADERS'] = 'Contet-Type'
 
 jawsdb_url = os.getenv("JAWSDB_URL")
 db_name = os.getenv('DB_NAME')
