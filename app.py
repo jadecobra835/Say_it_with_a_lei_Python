@@ -1,58 +1,46 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-import mysql.connector
-from mysql.connector import Error
+from urllib.parse import urlparse
 import json
-from datetime import date
 
 app = Flask(__name__)
-cors = CORS(app, supports_credentials=True, resources={
-    r"/*": {
-        "origins": [
-            "http://localhost:3000", 
-            "https://xjj-say-it-with-a-lei-34e7166cb08e.herokuapp.com"
-        ],
-        "methods": ["POST", "GET", "DELETE"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+CORS(app, supports_credentials=True)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql://ijvfg0wx4cjc30z1:zl87h5usl76bemkt@enqhzd10cxh7hv2e.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/rw3nklf1029jieu'
+db_url = 'mysql://ijvfg0wx4cjc30z1:zl87h5usl76bemkt@enqhzd10cxh7hv2e.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/rw3nklf1029jieu3'
 
-# jawsdb_url = SQLAlchemy(app)
+url = urlparse(db_url)
 
-# def my_db():
-#     connection = None
-#     try: 
-#         if jawsdb_url:
-#             import urllib.parse as urlparse
-#             url = urlparse.urlparse(jawsdb_url)
-#             connection = mysql.connector.connect(
-#                 user=url.username,
-#                 password=url.password,
-#                 host=url.hostname,
-#                 port=url.port,
-#                 database=url.path[1:]
-#             )
-#         else:
-#             connection = mysql.connector.connect(
-#                 user="root",
-#                 password="BlueStitch2006!",
-#                 host="localhost",
-#                 port=3306,
-#                 database = "lei_catalog"
-#             )
-#         print("Connection to MySQL DB successful")
-#     except Error as e:
-#         print(f"The error '{e}' occured")
+db_user = url.username
+db_password = url.password
+db_host = url.hostname
+db_port = url.port
+db_name = url.path[1:]
 
-#     return connection
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+class leiItems(db.Model):
+    __tablename__ = 'preset_leis'
+    id = db.Column(db.Integer, primary_key=True, unique=True, nullable=False)
+    name = db.Column(db.String(45), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    image = db.Column(db.LargeBinary, nullable=False)
+    description = db.Column(db.String(1000))
+    color1 = db.Column(db.String(45), nullable=False)
+    color2 = db.Column(db.String(45))
+    color3 = db.Column(db.String(45))
+    color4 = db.Column(db.String(45))
+    type = db.Column(db.String(20))
 
 
+def create_tables():
+    db.create_all()
 
-# mydb = my_db()
-mydb = SQLAlchemy(app)
 
 @app.route("/auth", methods=["POST"])
 def authCheck():
@@ -75,14 +63,37 @@ def authCheck():
     else:
         return "Wrong username or password"
 
+@app.route("/get-preset-leis", defaults={'leiType': None}, methods=["GET"])
+@app.route('/get-preset-leis/<leiType>')
+def get_preset_leis(leiType):
+    try:
+        results = leiItems.query.all()
+
+        data = [{
+            'id': item.id,
+            'name': item.name,
+            'price': item.price,
+            'image': item.image.decode('utf-8'),
+            'description': item.description,
+            'color1': item.color1,
+            'color2': item.color2,
+            'color3': item.color3,
+            'color4': item.color4,
+            'type': item.type
+        } for item in [ leitype for leitype in results if leitype.type == leiType]]
+
+        return jsonify(data)
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+    
 
 @app.route("/add-lei", methods=["POST"])
 def add_lei():
-    post_data = (request.json)
+    post_data = request.json
 
     name = post_data['name']
     price = post_data['price']
-    image = post_data['image']
+    image = post_data['image'].encode('utf-8')  # Assuming the image is provided as a base64-encoded string
     description = post_data['description']
     color1 = post_data['color1']
     color2 = post_data['color2']
@@ -90,85 +101,57 @@ def add_lei():
     color4 = post_data['color4']
     type = post_data['type']
 
-    sql = '''INSERT INTO preset_leis ( name, price, image, description, color1, color2, color3, color4, type)
-             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)'''
-    
-    leiItem = ( name, price, image, description, color1, color2, color3, color4, type)
-    
-    mydb.execute(sql, leiItem)
-    mydb.commit()
+    new_lei = leiItems(
+        name=name,
+        price=price,
+        image=image,
+        description=description,
+        color1=color1,
+        color2=color2,
+        color3=color3,
+        color4=color4,
+        type=type
+    )
+
+    db.session.add(new_lei)
+    db.session.commit()
 
     return jsonify("record inserted")
 
 
-@app.route("/get-preset-leis", defaults={'type': None}, methods=["GET"])
-@app.route('/get-preset-leis/<type>')
-def get_leis(type):
-    graduation = ("SELECT * FROM preset_leis WHERE type ='%s'" % type)
-    mydb.execute(graduation)
-    myresult = mydb.fetchall()
-
-    def decodeBytes(data):
-        return [{   
-            'id': item[0],
-            'name': item[1],
-            'price': item[2],
-            'image': item[3].decode('utf-8'),
-            'description': item[4],
-            'color1': item[5],
-            'color2': item[6],
-            'color3': item[7],
-            'color4': item[8],
-            'type': item[9]
-        } for item in data]
-    
-    decodedData = decodeBytes(myresult)
-
-    json_data = json.dumps(decodedData)
-
-    return json_data
-    
-
 @app.route("/get-one-lei", defaults={'product_id': None}, methods=["GET"])
 @app.route('/get-one-lei/<product_id>')
 def get_lei(product_id):
-    comboString = "SELECT * FROM preset_leis WHERE id =" + product_id
-    mydb.execute(comboString)
-    myresult = mydb.fetchall()
+    leiItem = leiItems.query.filter_by(id=product_id).first()
 
     def decodeBytes(data):
         return [{   
-            'id': item[0],
-            'name': item[1],
-            'price': item[2],
-            'image': item[3].decode('utf-8'),
-            'description': item[4],
-            'color1': item[5],
-            'color2': item[6],
-            'color3': item[7],
-            'color4': item[8],
-            'type': item[9]
-        } for item in data]
+            'id': data.id,
+            'name': data.name,
+            'price': data.price,
+            'image': data.image.decode('utf-8'),
+            'description': data.description,
+            'color1': data.color1,
+            'color2': data.color2,
+            'color3': data.color3,
+            'color4': data.color4,
+            'type': data.type
+        }]
     
-    decodedData = decodeBytes(myresult)
+    decodedData = decodeBytes(leiItem)
 
     json_data = json.dumps(decodedData)
 
     return json_data
 
-
+    
 @app.route('/delete-lei/<product_id>', methods=["DELETE"])
 def deleteLei(product_id):
-    command = "DELETE FROM preset_leis WHERE id=" + product_id
-    
-    try: 
-        mydb.execute(command)
-        mydb.commit()
-        return 'Successfully deleted Lei'
-
-    except mysql.connector.Error as error:
-        return 'Failed to delete Lei'
+    leiItems.query.filter_by(id=product_id).delete()
+    db.session.commit()
+    return 'Successfully deleted Lei'
 
 
 if __name__ == "__main__":
     app.run(host='localhost', port=5000)
+    # app.run(debug=True)
