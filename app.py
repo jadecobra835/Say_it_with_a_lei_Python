@@ -45,13 +45,13 @@ def create_tables():
 @app.route("/auth", methods=["POST"])
 def authCheck():
     developer = {
-        "auth[userName]": "xanderjamesjensen@icloud.com",
-        "auth[password]": "stitch2006"
+        "auth[userName]": "testuser12345",
+        "auth[password]": "testpassword12345"
     }
 
     jen = {
-        "auth[userName]": "djgilsons",
-        "auth[password]": "Aloha2001!"
+        "auth[userName]": "testuser54321",
+        "auth[password]": "testuser54321"
     }
 
     auth_data = (request.form)
